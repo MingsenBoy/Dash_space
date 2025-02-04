@@ -86,6 +86,7 @@ def node_recation(Unit, data):
 def edge_recation(Unit, data):
     
     colored_sen_list = []
+    # from,to token
     from_to_token = data[0].split("_")
     from_token = from_to_token[0]
     to_token = from_to_token[1]
@@ -121,6 +122,7 @@ def edge_recation(Unit, data):
             label = origin_key_dict_pd[origin_key_dict_pd['keywords'] == from_token]['label'].values[0]
             label2 = origin_key_dict_pd[origin_key_dict_pd['keywords'] == to_token]['label'].values[0]
 
+        # 資料型態轉為datatime後，降序排列
         main_df['date'] = pd.to_datetime(main_df['date']).dt.date
         main_df = main_df.sort_values(
             by='date', ascending=False).reset_index(drop=True)
@@ -163,12 +165,13 @@ def edge_recation(Unit, data):
                             | (token_df[to_token] >= 1)]
         index = RAW_SEN.loc[token_df.index.tolist()]  # index取值
         index = index[index.duplicated('doc_id', keep=False)]  # 僅保留同篇文章資料
-        doc_df = DTM_DOC[(DTM_DOC[from_token] >= 1) & (DTM_DOC[to_token] >= 1)] # 找出包含兩個的document
+
 
         # 欄位合併
         merged_df2 = pd.merge(index, senlabel, on=['doc_id', 'sen_id'])
         merged_df2 = pd.merge(merged_df2, RAW_DOC, on='doc_id', how='left')
-        merged_df2 = merged_df2[merged_df2['doc_id'].isin(doc_df.index)]    
+        merged_df2 = merged_df2[(merged_df2['sen_kw_list'] == from_token) | (
+            merged_df2['sen_kw_list'] == to_token)]
 
         # 兩關鍵字實體數量不同，數量大的或為基準
         if len(merged_df2[merged_df2['sen_kw_list'] == to_token].reset_index(
@@ -225,7 +228,7 @@ def edge_recation(Unit, data):
             
             colored_sen_list.append(colored_text)
 
-    
+
     main_df["colored_sen"] = colored_sen_list
     #刪除重複['doc_id', 'sen_id']的row
     main_df = main_df.drop_duplicates(subset=['doc_id', 'sen_id'], keep='first').reset_index(drop=True)
@@ -263,6 +266,7 @@ def get_element_modify(Unit, Z, type, stratum1_num, stratum2_num, threshold, inp
             v = input_data[Z].tolist()
             v = list(enumerate(v))
 
+
         v = sorted(v, key=lambda x: x[1], reverse=True)  # 降序排列
         v_index = [i for i, _ in v][:stratum1_num]  # 取出前K個索引 correspond keyword number of first-level
 
@@ -295,6 +299,7 @@ def get_element_modify(Unit, Z, type, stratum1_num, stratum2_num, threshold, inp
         x = input_data.loc[uni_all_node_list, col_index]  # v_index,col_index取值
         x.columns = uni_all_node_list
 
+
         x_values = x.values  # 獲取x的數據部分，轉換為numpy數組
         # 獲取下三角部分的boolean *x_values.shape:使用x_values數組的形狀來確定矩陣的行數和列數 dtype:設定矩陣資料型態 k:True或False比例
         lower_triangle = np.tri(*x_values.shape, dtype=bool, k=0)
@@ -319,10 +324,8 @@ def get_element_modify(Unit, Z, type, stratum1_num, stratum2_num, threshold, inp
         # 閥值計算
         value_list = melted_df["Value"].tolist()
         
-        if len(value_list) == 0:
-            percentile = None
-        else:
-            percentile = np.percentile(value_list, (threshold * 100))  # 根據value_list算出閥值
+
+        percentile = np.percentile(value_list, (threshold * 100))  # 根據value_list算出閥值
 
         melted_df_thres = melted_df[melted_df['Value'] >= percentile].reset_index(
             drop=True)  # 取符合threshold的value
@@ -343,10 +346,12 @@ def get_element_modify(Unit, Z, type, stratum1_num, stratum2_num, threshold, inp
         ), melted_df_thres['Value'].max()
         melted_df_thres['edge_width'] = melted_df_thres['Value'].apply(
             lambda x: calculate_edge_width(x, Min, Max))
+        
 
         nodes_list = melted_df_thres['from_name'].tolist(
         ) + melted_df_thres['to_name'].tolist()
         nodes_list = list(set(nodes_list))  # 刪除重複值
+
 
         # 字典對應節點的freq值
         for node in nodes_list:
@@ -529,7 +534,7 @@ def register_callback(app):
             # 將node對應資料映射到datatable
             merged_df, token = node_recation(
                 Unit, selection['nodes'])
-            for i, j, k, l in zip(merged_df['date'], merged_df['doc_id'], merged_df['colored_sen'], merged_df['link']):
+            for i, j, k, l in zip(merged_df['date'], merged_df['doc_id'], merged_df['colored_sen'], merged_df['url']):
                 res.append({'Date': i, 'id': "<a href= " + l + " target='_blank'>" +
                         str(j) + "</a>", 'Recent': k})
         elif len(selection['edges']) != 0:
@@ -537,7 +542,7 @@ def register_callback(app):
             # 將edge對應資料映射到datatable
             merged_df2, from_token, to_token = edge_recation(
                 Unit, selection['edges'])
-            for i, j, k, l in zip(merged_df2['date'], merged_df2['doc_id'], merged_df2['colored_sen'], merged_df2['link']):
+            for i, j, k, l in zip(merged_df2['date'], merged_df2['doc_id'], merged_df2['colored_sen'], merged_df2['url']):
                 res.append({'Date': i, 'id': "<a href= " + l + " target='_blank'>" +
                         str(j) + "</a>", 'Recent': k})
         else:
@@ -583,7 +588,6 @@ def register_callback(app):
                 # while the 'edges' display the branches all related to the chosen keyword.               
                 color_doc_id_df = color_doc[color_doc['doc_kw_list']==selection['nodes'][0]]
                 color_doc_id_df = color_doc_id_df.sort_values(by='start')
-
                 for index, row in color_doc_id_df.iterrows():
                     start = int(row["start"]) + offset
                     end = int(row["end"]) + offset
@@ -603,6 +607,8 @@ def register_callback(app):
                 for index, row in color_doc_id_df.iterrows():
                     start = int(row["start"]) + offset
                     end = int(row["end"]) + offset
+                    print(start)
+                    print(end)
                     color_index = CLASS_LIST.index(row["label"])
                     color = COLOUR[color_index]
                     span_len = len(f"<span style='color: {color};'></span>")

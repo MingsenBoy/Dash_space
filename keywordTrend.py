@@ -2,7 +2,7 @@ from dash import Dash, html, dcc, callback, Output, Input
 import plotly.express as px
 import pandas as pd
 
-dtm = pd.read_csv('/home/mirdc/ShinyApps/Spacenews/data/dict_test/freq_DTM.csv')
+dtm = pd.read_csv(r'D:\Lab\project\spacenews\dash\data3\freq_DTM.csv')
 monthList = ['一月', '二月', '三月', '四月', '五月',
              '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
 monthOption = []  # the list for option
@@ -91,14 +91,14 @@ app.layout = html.Div([
     ], style={'color': '#83A742'}),
     html.Div([
         html.Div([
-            html.U(children='每月文章篇數', style={
+            html.U(children='每月關鍵字出現次數', style={
                 'font-weight': 'bold', 'font-size': '28px', 'textAlign': 'left', "color": '#36451a'}),
             dcc.Graph(id='line-chart'),
-        ], style={'width': '48%', 'display': 'inline-block', 'border-right': '1px solid #83A742', 'border-left': '10px solid white'}),
-        html.Div([
-            html.U(children='每月文章比重', style={
-                'font-weight': 'bold', 'font-size': '28px', 'textAlign': 'left', "color": '#36451a'}),
-            dcc.Graph(id='percentage'),], style={'width': '48%', 'display': 'inline-block', 'border-left': '9px solid white'})
+        ], style={'border-right': '1px solid #83A742'}),
+        # html.Div([
+        #     html.U(children='每月文章比重', style={
+        #         'font-weight': 'bold', 'font-size': '28px', 'textAlign': 'left', "color": '#36451a'}),
+        #     dcc.Graph(id='percentage'),], style={'width': '48%', 'display': 'inline-block', 'border-left': '9px solid white'})
     ], style={'margin': '20px'})
 ])
 
@@ -156,10 +156,10 @@ def update_month_to_options(selected_year):
 
     return options, value
 
-
+#　
 @app.callback(
     Output('line-chart', 'figure'),
-    Output('percentage', 'figure'),
+    # Output('percentage', 'figure'),
     Input('inputLabel', 'value'),
     Input('year_from', 'value'),
     Input('month_from', 'value'),
@@ -168,6 +168,8 @@ def update_month_to_options(selected_year):
     Input('K', 'value')
 )
 def update_output(label, yf, mf, yt, mt, k):
+    # print(k)
+    # label = "loc", yf = "2017" mf = "01" yt = "2017" mt = "03" k = [1, 10]
     # begin: the begining month
     begin = (yf+'-'+mf)
     # end: the ending month
@@ -185,6 +187,7 @@ def update_output(label, yf, mf, yt, mt, k):
     dtm1 = dtm0.loc[:, begin:end]
 
     for col in dtm1.columns:
+        # break
         col_sum = dtm1[col].sum()  # Calculate the sum of the column
         # percentage <- value = value/ sum of the column
         dtm1[col] = (dtm1[col] / col_sum)*100
@@ -194,6 +197,7 @@ def update_output(label, yf, mf, yt, mt, k):
     data = []
     data1 = []
     for keyword in selected_keywords:
+        # break
         # dtm0.columns[:-2] all column names expect the last two
         y_values = dtm0[dtm0['keywords'] == keyword][list(
             dtm0.columns[:-2])].values.flatten().tolist()
@@ -217,7 +221,7 @@ def update_output(label, yf, mf, yt, mt, k):
     }
     figure0 = {'data': data, 'layout': layout}
     figure1 = {'data': data1, 'layout': layout1}
-    return (figure0, figure1)
+    return (figure0)
 
-
-app.run_server("0.0.0.0",port=8089, debug=True)
+app.run_server(debug=True, use_reloader=True)
+# app.run_server("0.0.0.0",port=8089, debug=True)

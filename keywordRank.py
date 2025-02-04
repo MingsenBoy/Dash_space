@@ -2,7 +2,7 @@ from dash import Dash, html, dcc, callback, Output, Input
 import pandas as pd
 import plotly.graph_objects as go
 
-dtm = pd.read_csv('/home/mirdc/ShinyApps/Spacenews/data/dict_test/freq_DTM.csv')
+dtm = pd.read_csv(r'D:\Lab\project\spacenews\dash\data3\freq_DTM.csv')
 
 # segment labels by colours
 # capital setting
@@ -56,7 +56,7 @@ app.layout = html.Div([
 def display_animated_graph(K):
 
     # get latest 36 months
-    months = dtm.columns.values.flatten().tolist()[-36:]
+    months = dtm.columns.values.flatten().tolist()[-60:]
     # set sliders_dict
     sliders_dict = {
         "active": 0,
@@ -202,5 +202,5 @@ def display_animated_graph(K):
         sliders=[sliders_dict])
     return fig1
 
-
-app.run_server("0.0.0.0",port=8090, debug=True)
+app.run_server(debug=True, use_reloader=True)
+# app.run_server("0.0.0.0",port=8090, debug=True)

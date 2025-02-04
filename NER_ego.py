@@ -79,7 +79,7 @@ app.layout = html.Div(children=[
             # 切換類別下拉式選單
             dcc.Dropdown(
                 id='dropdown_choose_class',
-                value=4,
+                value=2,
                 clearable=False,
                 options=[
                     {'label': clas, 'value': i}
@@ -161,7 +161,7 @@ app.layout = html.Div(children=[
                 id='RadioItems_SenorDoc',
                 options=[{'label': '句 ', 'value': 'Sentence'},
                          {'label': '篇', 'value': 'Document'},],
-                value='Sentence',
+                value='Document',
                 inline=True,
                 style={'margin': '0.5rem 1rem 0rem 0rem',
                        'display': 'inline-block'}
@@ -215,7 +215,6 @@ app.layout = html.Div(children=[
                          'color': '#f2efe4',
                          'height': '7.5%',
                          'text-align': 'center',
-                         'font-size': '24px',
                          'padding': '0px'}),
             # 網路圖
             visdcc.Network(
@@ -350,5 +349,5 @@ app.layout = html.Div(children=[
 
 register_callback(app)
 
-#app.run_server(debug=True, use_reloader=False)
-app.run_server("0.0.0.0",port=8071, debug=True)
+app.run_server(debug=True, use_reloader=True)
+# app.run_server("0.0.0.0",port=8071, debug=True)

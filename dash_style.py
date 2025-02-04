@@ -32,7 +32,7 @@ def get_ledgend(COLOUR, LEGEND):
                         'color': 'white',
                         'display': 'inline-block',
                         'width': str(propotion)+'%',
-                        'font-size': '20px'
+                        'font-size': '16px'
                     })
         legend.append(l)
     
